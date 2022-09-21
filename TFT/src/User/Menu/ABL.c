@@ -17,31 +17,28 @@ void ablUpdateStatus(bool succeeded)
   switch (infoMachineSettings.leveling)
   {
     case BL_BBL:
-    {
       tempTitle.index = LABEL_ABL_SETTINGS_BBL;
       break;
-    }
+
     case BL_UBL:
-    {
       savingEnabled = false;
       tempTitle.index = LABEL_ABL_SETTINGS_UBL;
 
       sprintf(&tempMsg[strlen(tempMsg)], "\n %s", textSelect(LABEL_BL_SMART_FILL));
       break;
-    }
+
     default:
       break;
   }
 
   if (succeeded)  // if bed leveling process successfully terminated, allow to save to EEPROM
   {
-    BUZZER_PLAY(sound_success);
+    BUZZER_PLAY(SOUND_SUCCESS);
 
     if (savingEnabled && infoMachineSettings.EEPROM == 1)
     {
       sprintf(&tempMsg[strlen(tempMsg)], "\n %s", textSelect(LABEL_EEPROM_SAVE_INFO));
-      setDialogText(tempTitle.index, (uint8_t *) tempMsg, LABEL_CONFIRM, LABEL_CANCEL);
-      showDialog(DIALOG_TYPE_SUCCESS, saveEepromSettings, NULL, NULL);
+      popupDialog(DIALOG_TYPE_SUCCESS, tempTitle.index, (uint8_t *) tempMsg, LABEL_CONFIRM, LABEL_CANCEL, saveEepromSettings, NULL, NULL);
     }
     else
     {
@@ -50,7 +47,7 @@ void ablUpdateStatus(bool succeeded)
   }
   else  // if bed leveling process failed, provide an error dialog
   {
-    BUZZER_PLAY(sound_error);
+    BUZZER_PLAY(SOUND_ERROR);
 
     popupReminder(DIALOG_TYPE_ERROR, tempTitle.index, LABEL_PROCESS_ABORTED);
   }
@@ -109,9 +106,9 @@ void menuUBLSaveLoad(void)
       {ICON_EEPROM_SAVE,             LABEL_ABL_SLOT1},
       {ICON_EEPROM_SAVE,             LABEL_ABL_SLOT2},
       {ICON_EEPROM_SAVE,             LABEL_ABL_SLOT3},
-      {ICON_BACKGROUND,              LABEL_BACKGROUND},
-      {ICON_BACKGROUND,              LABEL_BACKGROUND},
-      {ICON_BACKGROUND,              LABEL_BACKGROUND},
+      {ICON_NULL,                    LABEL_NULL},
+      {ICON_NULL,                    LABEL_NULL},
+      {ICON_NULL,                    LABEL_NULL},
       {ICON_BACK,                    LABEL_BACK},
     }
   };
@@ -121,6 +118,7 @@ void menuUBLSaveLoad(void)
   if (!ublIsSaving)
   {
     UBLSaveLoadItems.title.index = LABEL_ABL_SETTINGS_UBL_LOAD;
+
     for (int i = 0; i < 4; i++)
     {
       UBLSaveLoadItems.items[i].icon = ICON_EEPROM_RESTORE;
@@ -129,7 +127,7 @@ void menuUBLSaveLoad(void)
 
   menuDrawPage(&UBLSaveLoadItems);
 
-  while (infoMenu.menu[infoMenu.cur] == menuUBLSaveLoad)
+  while (MENU_IS(menuUBLSaveLoad))
   {
     key_num = menuKeyGetValue();
     switch (key_num)
@@ -139,23 +137,19 @@ void menuUBLSaveLoad(void)
       case KEY_ICON_2:
       case KEY_ICON_3:
         ublSlot = key_num;
-
-        setDialogText(UBLSaveLoadItems.title.index, LABEL_CONFIRMATION, LABEL_CONFIRM, LABEL_CANCEL);
-        showDialog(DIALOG_TYPE_QUESTION, ublSaveloadConfirm, NULL, NULL);
+        popupDialog(DIALOG_TYPE_QUESTION, UBLSaveLoadItems.title.index, LABEL_CONFIRMATION, LABEL_CONFIRM, LABEL_CANCEL, ublSaveloadConfirm, NULL, NULL);
         break;
 
       case KEY_ICON_7:
         if (ublSlotSaved == true && infoMachineSettings.EEPROM == 1)
         {
           ublSlotSaved = false;
-
-          setDialogText(LABEL_ABL_SETTINGS_UBL, LABEL_ABL_SLOT_EEPROM, LABEL_CONFIRM, LABEL_CANCEL);
-          showDialog(DIALOG_TYPE_QUESTION, saveEepromSettings, NULL, NULL);
+          popupDialog(DIALOG_TYPE_QUESTION, LABEL_ABL_SETTINGS_UBL, LABEL_ABL_SLOT_EEPROM, LABEL_CONFIRM, LABEL_CANCEL, saveEepromSettings, NULL, NULL);
         }
         else
         {
           ublSlotSaved = false;
-          infoMenu.cur--;
+          CLOSE_MENU();
         }
         break;
 
@@ -170,11 +164,11 @@ void menuUBLSaveLoad(void)
 void menuUBLSave(void)
 {
   ublIsSaving = true;
-  infoMenu.menu[++infoMenu.cur] = menuUBLSaveLoad;
+  OPEN_MENU(menuUBLSaveLoad);
 }
 
 void menuUBLLoad(void)
 {
   ublIsSaving = false;
-  infoMenu.menu[++infoMenu.cur] = menuUBLSaveLoad;
+  OPEN_MENU(menuUBLSaveLoad);
 }
