@@ -1,7 +1,7 @@
 #ifndef _CONFIGURATION_H_
 #define _CONFIGURATION_H_
 
-#define CONFIG_VERSION 20220518
+#define CONFIG_VERSION 20230821
 
 //====================================================================================================
 //=============================== Settings Configurable On config.ini ================================
@@ -40,6 +40,45 @@
 #define SP_2 0  // Default: 0
 #define SP_3 0  // Default: 0
 #define SP_4 0  // Default: 0
+
+/**
+ * TX Slots
+ * Used/effective only in case "ADVANCED_OK" is also enabled.
+ * Maximum number of G-code TX slots used by the TFT for the communication with the printer.
+ *
+ * NOTES:
+ *   - It requires "ADVANCED_OK" to be enabled.
+ *   - This setting allows a sort of static "ADVANCED_OK" feature implementation on TFT side just in
+ *     case "ADVANCED_OK" feature is disabled in Marlin firmware. You have to set it according to the
+ *     following key requirements:
+ *     - a value not bigger than "BUFSIZE" configured in Configuration_adv.h in Marlin firmware.
+ *     - "RX_BUFFER_SIZE" properly configured in Configuration_adv.h in Marlin firmware.
+ *       To be safe you need (MAX_CMD_SIZE * BUFSIZE) RX buffer. By default this is 96 * 4 bytes so
+ *       you would need to at least set RX_BUFFER_SIZE to 512 bytes, practically half of that will
+ *       be enough, but more is better/safer.
+ *   - Typically, a value of 2 is enough to keep the printer busy most of the time while preventing
+ *     buffer overruns on RX buffer. Thus, 2 is the suggested value in case users want to use the
+ *     static ADVANCED_OK feature allowed by this setting.
+ *
+ *   Value range: [min: 2, max: 16]
+ */
+#define TX_SLOTS 2  // Default: 1
+
+/**
+ * Advanced OK
+ * If enabled:
+ * - if "ADVANCED_OK" feature is enabled in Configuration_adv.h in Marlin firmware, the TFT will use
+ *   the available G-code TX slots indication provided by the mainboard to schedule the transmission
+ *   of multiple G-codes, if any, for a maximum of the given indication.
+ * - if "ADVANCED_OK" feature is disabled in Configuration_adv.h in Marlin firmware, the TFT will
+ *   support the transmission of G-codes according to the configured "TX_SLOTS" setting.
+ * If disabled, the TFT will provide the standard transmission logic based on one G-code per time.
+ *
+ * NOTE: Disable it in case no ADVANCED_OK feature is requested/needed by the user.
+ *
+ *   Options: [disable: 0, enable: 1]
+ */
+#define ADVANCED_OK 0  // Default: 0
 
 /**
  * Emulated M600
@@ -511,7 +550,7 @@
  *
  *   Options: [disable: 0, enable: 1]
  */
-#define AUTO_LOAD_LEVELING 1  // Default: 1
+#define AUTO_LOAD_LEVELING 0  // Default: 0
 
 /**
  * Onboard / Printer Media
@@ -687,7 +726,7 @@
  * Z Steppers Auto-Alignment (ABL)
  * It allows to align multiple Z stepper motors using a bed probe by probing one position per stepper.
  * Enable this setting to show an icon in ABL menu allowing to run G34 command (it requires
- * Z_STEPPER_AUTO_ALIGN enabled in Configuration_adv.h in Marlin firmware).
+ * "Z_STEPPER_AUTO_ALIGN" enabled in Configuration_adv.h in Marlin firmware).
  *
  * NOTE: Only for Marlin printers with one stepper driver per Z stepper motor and no Z timing belt.
  *
@@ -857,7 +896,7 @@
  *
  * NOTE: Error messages from printer will always play the error sound.
  *
- * Parameters:
+ * Settings:
  *   touch_sound:  Enable/disable this to control touch feedback sound.
  *   toast_sound:  Enable/disable this to control all toast notification sounds.
  *   alert_sound:  Enable/disable this to control all popup and alert sounds
@@ -1075,6 +1114,12 @@
  */
 
 /**
+ * Monitoring Debug
+ * Uncomment/Enable to monitor/show system resources usage in Monitoring menu.
+ */
+//#define DEBUG_MONITORING  // Default: commented (disabled)
+
+/**
  * Generic Debug
  * Uncomment/Enable to enable arbitrary debug serial communication to SERIAL_DEBUG_PORT defined in board specific Pin_xx.h file.
  */
@@ -1136,10 +1181,13 @@
 
 // Manual Leveling
 // Move to four corner points to Leveling manually (Point 1, Point 2, Point 3, Point 4).
-#define LEVELING_EDGE_DISTANCE_DISPLAY_ID "X/Y"
-#define LEVELING_EDGE_DISTANCE_MIN           0                    // Default: 0
-#define LEVELING_EDGE_DISTANCE_MAX         100                    // Default: 100
-#define LEVELING_EDGE_DISTANCE_DEFAULT    LEVELING_EDGE_DISTANCE  // Default: LEVELING_EDGE_DISTANCE
+#define LEVELING_EDGE_DISTANCE_MIN       0                     // Default: 0
+#define LEVELING_EDGE_DISTANCE_MAX     100                     // Default: 100
+#define LEVELING_EDGE_DISTANCE_DEFAULT LEVELING_EDGE_DISTANCE  // Default: LEVELING_EDGE_DISTANCE
+
+#define LEVELING_Z_POS_MIN       0.0f          // Default: 0.0f
+#define LEVELING_Z_POS_MAX     100.0f          // Default: 100.0f
+#define LEVELING_Z_POS_DEFAULT LEVELING_Z_POS  // Default: LEVELING_Z_POS
 
 // Z Fade limits
 #define Z_FADE_MIN_VALUE      0.0f  // Default: 0.0f
@@ -1201,7 +1249,7 @@
 
 /**
  * M701, M702: Marlin Filament Load / Unload G-codes Support
- * FILAMENT_LOAD_UNLOAD_GCODES option on Marlin configuration_adv.h need to be uncommented.
+ * "FILAMENT_LOAD_UNLOAD_GCODES" option in Configuration_adv.h in Marlin fw needs to be uncommented.
  * Adds a submenu to the movement menu for selecting load and unload actions.
  */
 #define LOAD_UNLOAD_M701_M702  // Default: uncommented (enabled)
@@ -1229,7 +1277,7 @@
  *   Options: [ENGLISH,    CHINESE,  RUSSIAN,     JAPANESE,   ARMENIAN,  GERMAN,        CZECH,
  *             SPANISH,    FRENCH,   PORTUGUESE,  ITALIAN,    POLISH,    SLOVAK,        DUTCH,
  *             HUNGARIAN,  TURKISH,  GREEK,       SLOVENIAN,  CATALAN,   TRAD_CHINESE,  UKRAINIAN,
- *             BRAZIL]
+ *             BRAZIL,     CROATIAN]
  */
 #define SYSTEM_LANGUAGE ENGLISH  // Default: ENGLISH
 
@@ -1268,7 +1316,7 @@
  *       M300 S<frequency Hz> P<duration MilliSeconds>
  */
 #define BUZZER_FREQUENCY_DURATION_MS    20  // in ms. Default: 20
-#define BUZZER_FREQUENCY_HZ          10000  // in Hz (20Hz to 60000Hz). Default: 10000
+#define BUZZER_FREQUENCY_HZ          10548  // in Hz (20Hz to 60000Hz). Default: 10548 (musical note "E")
 
 /**
  * Buzzer Stop Level
@@ -1363,6 +1411,13 @@
  *     azerty: The typically keyboard Layout for french.
  */
 #define TERMINAL_KEYBOARD_LAYOUT 0  // Default: 0
+
+/**
+ * Suppress/allow terminal cache during keyboard view
+ * Uncomment to disable terminal cache during keyboard view.
+ * Comment to enable terminal cache during keyboard view.
+ */
+#define TERMINAL_KEYBOARD_VIEW_SUPPRESS_ACK  // Default: uncommented (cache suppressed)
 
 /**
  * Progress Bar Color (Printing menu)

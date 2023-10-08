@@ -152,7 +152,7 @@ bool printPageItemSelected(uint16_t index)
     infoFile.fileIndex = index - infoFile.folderCount;
     char * filename = restoreFilenameExtension(infoFile.fileIndex);  // restore filename extension if filename extension feature is disabled
 
-    if (infoHost.connected != true || enterFolder(infoFile.file[infoFile.fileIndex]) == false)  // always use short filename for file path
+    if (infoHost.connected == false || enterFolder(infoFile.file[infoFile.fileIndex]) == false)  // always use short filename for file path
     {
       hasUpdate = false;
     }
@@ -164,8 +164,9 @@ bool printPageItemSelected(uint16_t index)
       char temp_info[FILE_NUM + 50];
       sprintf(temp_info, (char *)textSelect(LABEL_START_PRINT), (uint8_t *)(filename));  // display short or long filename
 
-      // confirm file selction
-      popupDialog(DIALOG_TYPE_QUESTION, LABEL_PRINT, (uint8_t *)temp_info, LABEL_CONFIRM, LABEL_CANCEL, startPrint, exitFolder, NULL);
+      // confirm file selection
+      popupDialog(DIALOG_TYPE_QUESTION, LABEL_PRINT, (uint8_t *)temp_info, LABEL_CONFIRM, LABEL_CANCEL,
+                  startPrinting, exitFolder, NULL);
 
       hasUpdate = false;
     }
@@ -467,6 +468,6 @@ void menuPrint(void)
   }
 
 selectEnd:
-  if (!isHostPrinting())  // prevent reset if printing from other source
+  if (!isPrintingFromOnboard())  // prevent reset if printing from other source
     resetInfoFile();
 }
